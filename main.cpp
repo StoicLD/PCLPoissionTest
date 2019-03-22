@@ -15,21 +15,50 @@
 using namespace pcl;
 using namespace std;
 
-int
-main (int argc, char** argv)
+int main (int argc, char** argv)
 {
 
 
         /*点云读入阶段*/
-        if(argc <= 2) {
+        if(argc <= 2)
+        {
                 cout << "请输入点云数据文件名称，并指定输出数据文件名称" << endl;
                 return 1;
 
         }
         PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ>);
-        if(io::loadPCDFile<PointXYZ> (argv[1], *cloud) == -1){
-                cout << "数据读入失败！！" << endl;
 
+        pcl::PLYReader reader;
+
+        string filename(argv[1]);
+        string file_extend = "";
+        string file_pcd_name = "";
+        if(filename.size() > 4)
+        {
+            file_extend = filename.substr(filename.size() - 3);
+            if(file_extend == "ply")
+            {
+                if (reader.read(argv[1], *cloud) == -1) {
+                    cout << "ply文件读取失败!" << endl;
+                    return 1;
+                }
+                file_pcd_name = filename.substr(filename.size() - 3) + "pcd";
+                int save_success = pcl::io::savePCDFile(file_pcd_name, *cloud);
+                if (save_success == -1) {
+                    cout << "ply文件保存失败！" << endl;
+                    return 1;
+                }
+            }
+        }
+        else
+        {
+            cout<<"读取的文件名不足四个字符！"<<endl;
+        }
+
+        int success = io::loadPCDFile<PointXYZ> (file_pcd_name, *cloud);
+        if(success == -1)
+        {
+                cout << "数据读入失败！！" << endl;
                 return 1;
         }
         cout << "数据读入　　　完成" << endl;
@@ -108,7 +137,8 @@ main (int argc, char** argv)
         viewer->addCoordinateSystem(50.0);
         viewer->initCameraParameters();
 
-        while(!viewer->wasStopped()){
+        while(!viewer->wasStopped())
+        {
 
                 viewer->spinOnce(100);
                 boost::this_thread::sleep(boost::posix_time::microseconds(100000));
